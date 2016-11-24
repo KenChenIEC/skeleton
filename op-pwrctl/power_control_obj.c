@@ -87,7 +87,7 @@ poll_pgood(gpointer user_data)
 			{
 				control_power_emit_power_good(control_power);
 				control_emit_goto_system_state(control,"HOST_POWERED_ON");
-
+/*
 				rc = gpio_open(&CFAM_reset);
 				rc = gpio_write(&CFAM_reset,0);
 				gpio_close(&CFAM_reset);
@@ -101,7 +101,7 @@ poll_pgood(gpointer user_data)
                 rc = gpio_open(&CFAM_reset);
 				rc = gpio_write(&CFAM_reset,1);
 				gpio_close(&CFAM_reset);
-				
+*/				
 
 				rc = gpio_open(&pcie_reset);
 				rc = gpio_write(&pcie_reset,1);
@@ -161,6 +161,17 @@ on_set_power_state(ControlPower *pwr,
 			} else {
 				control_emit_goto_system_state(control,"HOST_POWERING_OFF");
 			}
+            rc = gpio_open(&CFAM_reset);
+            rc = gpio_write(&CFAM_reset,0);
+            gpio_close(&CFAM_reset);
+            rc = gpio_open(&LPC_reset);
+            rc = gpio_write(&LPC_reset,0);
+            rc = gpio_write(&LPC_reset,1);
+            gpio_close(&LPC_reset);
+            rc = gpio_open(&CFAM_reset);
+            rc = gpio_write(&CFAM_reset,1);
+            gpio_close(&CFAM_reset);
+
 			error = gpio_open(&power_pin);
 			if(error != GPIO_OK) { break;	}
 			error = gpio_write(&power_pin,!state);
