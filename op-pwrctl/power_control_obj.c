@@ -23,6 +23,7 @@ GPIO usb_reset    = (GPIO){ "USB_RESET" };
 GPIO pcie_reset   = (GPIO){ "PCIE_RESET" };
 GPIO CFAM_reset   = (GPIO){ "BMC_CFAM_RESET_N" };
 GPIO LPC_reset    = (GPIO){ "BMC_RST_BTN_OUT_N" };
+GPIO Button_clear = (GPII){ "Button_clear" };
 
 static GDBusObjectManagerServer *manager = NULL;
 
@@ -71,11 +72,16 @@ poll_pgood(gpointer user_data)
 				rc = gpio_open(&pcie_reset);
 				rc = gpio_write(&pcie_reset,0);
 				gpio_close(&pcie_reset);
+				
 
 				rc = gpio_open(&usb_reset);
 				rc = gpio_write(&usb_reset,0);
 				gpio_close(&usb_reset);
-
+				
+				rc = gpio_open(&Button_clear);
+				rc = gpio_write(&Button_clear,0);
+				rc = gpio_write(&Button_clear,1);
+				gpio_close(&Button_clear);
 			}
 			else
 			{
@@ -84,15 +90,17 @@ poll_pgood(gpointer user_data)
 
 				rc = gpio_open(&CFAM_reset);
 				rc = gpio_write(&CFAM_reset,0);
+				gpio_close(&CFAM_reset);
 
 				rc = gpio_open(&LPC_reset);
 //set dir
                 rc = gpio_write(&LPC_reset,0);
                 rc = gpio_write(&LPC_reset,1);
+				gpio_close(&LPC_reset);
 //set dir
+                rc = gpio_open(&CFAM_reset);
 				rc = gpio_write(&CFAM_reset,1);
 				gpio_close(&CFAM_reset);
-				gpio_close(&LPC_reset);
 				
 
 				rc = gpio_open(&pcie_reset);
@@ -253,7 +261,8 @@ on_bus_acquired(GDBusConnection *connection,
 		if(rc != GPIO_OK) { break; }		
         rc = gpio_init(connection,&CFAM_reset);
         if(rc != GPIO_OK) { break; }
-
+		rc = gpio_init(connection,&Button_clear);
+		if(rc != GPIO_OK) {break; }
 
 		uint8_t gpio;
 		rc = gpio_open(&pgood);

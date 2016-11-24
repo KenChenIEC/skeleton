@@ -77,10 +77,10 @@ reg_init()
 	devmem(bmcreg+0x9C,0x00000000);  //Set UART routing
 
 	bmcreg = memmap(mem_fd,SCU_BASE);
-	devmem(bmcreg+0x00,0x13008CE7);
-	devmem(bmcreg+0x04,0x0370E677);
-	devmem(bmcreg+0x20,0xDF48F7FF);
-	devmem(bmcreg+0x24,0xC738F202);
+	devmem(bmcreg+0x00,0x23fbf0b0);
+	devmem(bmcreg+0x04,0x21076030);
+	devmem(bmcreg+0x20,0x1b00afff);
+	devmem(bmcreg+0x24,0x8400000c);
 
 
 	//GPIO
