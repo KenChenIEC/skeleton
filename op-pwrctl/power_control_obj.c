@@ -161,15 +161,15 @@ on_set_power_state(ControlPower *pwr,
 			} else {
 				control_emit_goto_system_state(control,"HOST_POWERING_OFF");
 			}
-            rc = gpio_open(&CFAM_reset);
-            rc = gpio_write(&CFAM_reset,0);
+            error = gpio_open(&CFAM_reset);
+            error = gpio_write(&CFAM_reset,0);
             gpio_close(&CFAM_reset);
-            rc = gpio_open(&LPC_reset);
-            rc = gpio_write(&LPC_reset,0);
-            rc = gpio_write(&LPC_reset,1);
+            error = gpio_open(&LPC_reset);
+            error = gpio_write(&LPC_reset,0);
+            error = gpio_write(&LPC_reset,1);
             gpio_close(&LPC_reset);
-            rc = gpio_open(&CFAM_reset);
-            rc = gpio_write(&CFAM_reset,1);
+            error = gpio_open(&CFAM_reset);
+            error = gpio_write(&CFAM_reset,1);
             gpio_close(&CFAM_reset);
 
 			error = gpio_open(&power_pin);
