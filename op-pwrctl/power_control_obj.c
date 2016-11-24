@@ -22,7 +22,7 @@ GPIO pgood        = (GPIO){ "PGOOD" };
 GPIO usb_reset    = (GPIO){ "USB_RESET" };
 GPIO pcie_reset   = (GPIO){ "PCIE_RESET" };
 GPIO CFAM_reset   = (GPIO){ "BMC_CFAM_RESET_N" };
-GPIO LPC_reset    = (GPIO){ "BMC_CFAM_RESET_N" };
+GPIO LPC_reset    = (GPIO){ "BMC_RST_BTN_OUT_N" };
 
 static GDBusObjectManagerServer *manager = NULL;
 
