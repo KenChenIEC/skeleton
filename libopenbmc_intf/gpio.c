@@ -184,6 +184,7 @@ int gpio_open_interrupt(GPIO* gpio, GIOFunc func, gpointer user_data)
 {
 	int rc = GPIO_OK;
 	char buf[255];
+	int fd;
 	sprintf(buf, "%s/gpio%d/value", gpio->dev, gpio->num);
 	gpio->fd = open(buf, O_RDONLY | O_NONBLOCK );
 	gpio->irq_inited = false;
