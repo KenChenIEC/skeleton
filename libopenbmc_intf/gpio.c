@@ -184,7 +184,6 @@ int gpio_open_interrupt(GPIO* gpio, GIOFunc func, gpointer user_data)
 {
 	int rc = GPIO_OK;
 	char buf[255];
-	int fd;
 	sprintf(buf, "%s/gpio%d/value", gpio->dev, gpio->num);
 	gpio->fd = open(buf, O_RDONLY | O_NONBLOCK );
 	gpio->irq_inited = false;
@@ -203,11 +202,11 @@ int gpio_direction(GPIO* gpio,char* direction)
 {
 	int rc = GPIO_OK;
     char dev[255];
+	int fd;
 	sprintf(dev, "%s/gpio%d/value", gpio->dev, gpio->num);
 	fd = open(dev,O_WRONLY);
     if (fd == GPIO_ERROR) {
         rc = GPIO_WRITE_ERROR;
-        break;
     }
 	if (strcmp(direction,"in")==0)
 	{
@@ -220,7 +219,6 @@ int gpio_direction(GPIO* gpio,char* direction)
     rc = write(fd,gpio->direction,strlen(gpio->direction));
     if (rc != strlen(gpio->direction)) {
         rc = GPIO_WRITE_ERROR;
-        break;
     }
 	return GPIO_OK;
 
