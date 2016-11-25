@@ -22,6 +22,7 @@ GPIO fsi_enable   = (GPIO){ "FSI_ENABLE" };
 GPIO cronus_sel   = (GPIO){ "CRONUS_SEL" };
 GPIO Throttle     = (GPIO){ "BMC_THROTTLE" };
 GPIO idbtn     	  = (GPIO){ "IDBTN" };
+GPIO CFAM_reset   = (GPIO){ "BMC_CFAM_RESET_N" };
 
 /* Bit bang patterns */
 
@@ -90,6 +91,9 @@ on_boot(ControlHost *host,
 		rc |= gpio_open(&fsi_enable);
 		rc |= gpio_open(&cronus_sel);
 		rc |= gpio_write(&fsi_enable,1);
+		rc = gpio_open(&CFAM_reset);
+        rc = gpio_write(&CFAM_reset,1);
+        gpio_close(&CFAM_reset);
 		rc |= gpio_write(&cronus_sel,0);
 		if(rc!=GPIO_OK) {
 			g_print("ERROR enabling debug mode: %d\n",rc);

@@ -101,10 +101,10 @@ poll_pgood(gpointer user_data)
 				rc = gpio_open(&LPC_reset);
 				gpio_close(&LPC_reset);
 //set dir
-                rc = gpio_open(&CFAM_reset);
+/*                rc = gpio_open(&CFAM_reset);
 				rc = gpio_write(&CFAM_reset,1);
 				gpio_close(&CFAM_reset);
-				
+*/				
 
 				rc = gpio_open(&pcie_reset);
 				rc = gpio_write(&pcie_reset,1);
