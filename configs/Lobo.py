@@ -38,12 +38,10 @@ FRU_INSTANCES = {
     '<inventory_root>/system/chassis/motherboard/refclock' : { 'fru_type' : 'MAIN_PLANAR', 'is_fru' : False, },
     '<inventory_root>/system/chassis/motherboard/pcieclock': { 'fru_type' : 'MAIN_PLANAR', 'is_fru' : False, },
     '<inventory_root>/system/chassis/motherboard/todclock' : { 'fru_type' : 'MAIN_PLANAR', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/apss'     : { 'fru_type' : 'MAIN_PLANAR', 'is_fru' : False, },
 
     '<inventory_root>/system/chassis/fan0' : { 'fru_type' : 'FAN','is_fru' : True, },
     '<inventory_root>/system/chassis/fan1' : { 'fru_type' : 'FAN','is_fru' : True, },
     '<inventory_root>/system/chassis/fan2' : { 'fru_type' : 'FAN','is_fru' : True, },
-    '<inventory_root>/system/chassis/fan3' : { 'fru_type' : 'FAN','is_fru' : True, },
 
     '<inventory_root>/system/chassis/motherboard/bmc' : { 'fru_type' : 'BMC','is_fru' : False, 'manufacturer' : 'ASPEED' },
 
@@ -75,15 +73,6 @@ FRU_INSTANCES = {
     '<inventory_root>/system/chassis/motherboard/cpu1/core9' : { 'fru_type' : 'CORE', 'is_fru' : False, },
     '<inventory_root>/system/chassis/motherboard/cpu1/core10' : { 'fru_type' : 'CORE', 'is_fru' : False, },
     '<inventory_root>/system/chassis/motherboard/cpu1/core11' : { 'fru_type' : 'CORE', 'is_fru' : False, },
-
-    '<inventory_root>/system/chassis/motherboard/membuf0' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf1' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf2' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf3' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf4' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf5' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf6' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
-    '<inventory_root>/system/chassis/motherboard/membuf7' : { 'fru_type' : 'MEMORY_BUFFER', 'is_fru' : False, },
 
     '<inventory_root>/system/chassis/motherboard/dimm0' : { 'fru_type' : 'DIMM', 'is_fru' : True,},
     '<inventory_root>/system/chassis/motherboard/dimm1' : { 'fru_type' : 'DIMM', 'is_fru' : True,},
@@ -169,14 +158,6 @@ ID_LOOKUP = {
         'BOARD_2'    : '<inventory_root>/system/chassis/motherboard/cpu1',
         'CHASSIS_3'  : '<inventory_root>/system/chassis/motherboard',
         'BOARD_3'    : '<inventory_root>/system/misc',
-        'BOARD_4'    : '<inventory_root>/system/chassis/motherboard/membuf0',
-        'BOARD_5'    : '<inventory_root>/system/chassis/motherboard/membuf1',
-        'BOARD_6'    : '<inventory_root>/system/chassis/motherboard/membuf2',
-        'BOARD_7'    : '<inventory_root>/system/chassis/motherboard/membuf3',
-        'BOARD_8'    : '<inventory_root>/system/chassis/motherboard/membuf4',
-        'BOARD_9'    : '<inventory_root>/system/chassis/motherboard/membuf5',
-        'BOARD_10'   : '<inventory_root>/system/chassis/motherboard/membuf6',
-        'BOARD_11'   : '<inventory_root>/system/chassis/motherboard/membuf7',
         'PRODUCT_12'   : '<inventory_root>/system/chassis/motherboard/dimm0',
         'PRODUCT_13'   : '<inventory_root>/system/chassis/motherboard/dimm1',
         'PRODUCT_14'   : '<inventory_root>/system/chassis/motherboard/dimm2',
@@ -214,8 +195,6 @@ ID_LOOKUP = {
     'SENSOR' : {
         0x04 : '/org/openbmc/sensors/host/HostStatus',
         0x05 : '/org/openbmc/sensors/host/BootProgress',
-        0x08 : '/org/openbmc/sensors/host/cpu0/OccStatus',
-        0x09 : '/org/openbmc/sensors/host/cpu1/OccStatus',
         0x0c : '<inventory_root>/system/chassis/motherboard/cpu0',
         0x0e : '<inventory_root>/system/chassis/motherboard/cpu1',
         0x1e : '<inventory_root>/system/chassis/motherboard/dimm3',
@@ -274,23 +253,12 @@ ID_LOOKUP = {
         0x53 : '<inventory_root>/system/chassis/motherboard/cpu1/core9',
         0x54 : '<inventory_root>/system/chassis/motherboard/cpu1/core10',
         0x55 : '<inventory_root>/system/chassis/motherboard/cpu1/core11',
-        0x56 : '<inventory_root>/system/chassis/motherboard/membuf0',
-        0x57 : '<inventory_root>/system/chassis/motherboard/membuf1',
-        0x58 : '<inventory_root>/system/chassis/motherboard/membuf2',
-        0x59 : '<inventory_root>/system/chassis/motherboard/membuf3',
-        0x5a : '<inventory_root>/system/chassis/motherboard/membuf4',
-        0x5b : '<inventory_root>/system/chassis/motherboard/membuf5',
-        0x5c : '<inventory_root>/system/chassis/motherboard/membuf6',
-        0x5d : '<inventory_root>/system/chassis/motherboard/membuf7',
         0x5f : '/org/openbmc/sensors/host/BootCount',
         0x60 : '<inventory_root>/system/chassis/motherboard',
         0x61 : '<inventory_root>/system/systemevent',
-        0x62 : '<inventory_root>/system/powerlimit',
         0x63 : '<inventory_root>/system/chassis/motherboard/refclock',
         0x64 : '<inventory_root>/system/chassis/motherboard/pcieclock',
         0xb1 : '<inventory_root>/system/chassis/motherboard/todclock',
-        0xb2 : '<inventory_root>/system/chassis/motherboard/apss',
-        0xb3 : '/org/openbmc/sensors/host/powercap',
         0xb5 : '/org/openbmc/sensors/host/OperatingSystemStatus',
         0xb6 : '<inventory_root>/system/chassis/motherboard/pcielink',
     },
@@ -298,61 +266,42 @@ ID_LOOKUP = {
 }
 
 GPIO_CONFIG = {}
-GPIO_CONFIG['BMC_POWER_UP'] = \
-        {'gpio_pin': 'D1', 'direction': 'out'}
 GPIO_CONFIG['SOFTWARE_PGOOD'] = \
         {'gpio_pin': 'R1', 'direction': 'out'}
+GPIO_CONFIG['BMC_POWER_UP'] = \
+        {'gpio_pin': 'D1', 'direction': 'out'}
 GPIO_CONFIG['SYS_PWROK_BUFF'] = \
         {'gpio_pin': 'D2', 'direction': 'in'}
-
-# PV_CP_MD_JTAG_ATTENTION_N
-GPIO_CONFIG['CHECKSTOP'] = \
-        {'gpio_pin': 'J2', 'direction': 'falling'}
-
-GPIO_CONFIG['BMC_CP0_RESET_N'] = \
+GPIO_CONFIG['PHY_RST_N'] = \
+        {'gpio_pin': 'D3', 'direction': 'out'}
+GPIO_CONFIG['HDD_PWR_EN'] = \
+        {'gpio_pin': 'D4', 'direction': 'out'}
+GPIO_CONFIG['CP0_DEVICES_RESET_N'] = \
         {'gpio_pin': 'A1', 'direction': 'out'}
-# pcie switch reset
-GPIO_CONFIG['BMC_VS1_PERST_N'] = \
-        {'gpio_pin': 'B7', 'direction': 'out'}
-# pcie slots reset - not connected?
-GPIO_CONFIG['BMC_CP0_PERST_ENABLE_R'] = \
+GPIO_CONFIG['BMC_CP0_PERST_ENABLE'] = \
         {'gpio_pin': 'A3', 'direction': 'out'}
-
-# SOFT_FSI_DAT
+GPIO_CONFIG['BMC_UCD_LATCH_LE'] = \
+        {'gpio_pin': 'B4', 'direction': 'out'}
 GPIO_CONFIG['FSI_DATA'] = \
         {'gpio_pin': 'E0', 'direction': 'out'}
-# SOFT_FSI_CLK
 GPIO_CONFIG['FSI_CLK'] = \
         {'gpio_pin': 'AA0', 'direction': 'out'}
-# BMC_FSI_IN_ENA
 GPIO_CONFIG['FSI_ENABLE'] = \
         {'gpio_pin': 'D0', 'direction': 'out'}
-# FSI_JMFG0_PRSNT_N
 GPIO_CONFIG['CRONUS_SEL'] = \
-        {'gpio_pin': 'A6', 'direction': 'out'}
-
-# FP_PWR_BTN_N
+        {'gpio_pin': 'P6', 'direction': 'out'}
+# FIXME: net name is FP_PWR_BTN_N in schematic
 GPIO_CONFIG['POWER_BUTTON'] = \
         {'gpio_pin': 'I3', 'direction': 'both'}
-# BMC_NMIBTN_IN_N
+# FIXME: net name is FP_RST_BTN_N in schematic
 GPIO_CONFIG['RESET_BUTTON'] = \
-        {'gpio_pin': 'J1', 'direction': 'both'}
-
-# FIXME: needed for Witherspoon?
-# Tracked by openbmc/openbmc#814
-# FP_ID_BTN_N
-GPIO_CONFIG['IDBTN'] = \
-    {'gpio_pin': 'Q7', 'direction': 'out'}
+        {'gpio_pin': 'G3', 'direction': 'both'}
+GPIO_CONFIG['PE_MEZZB_PRSNT_N'] = \
+        {'gpio_pin': 'P7', 'direction': 'in'}
 
 HWMON_CONFIG = {
     '4-0050' : {
         'names' : {
-            'caps_curr_powercap' : { 'object_path' : 'powercap/curr_cap','poll_interval' : 10000,'scale' : 1,'units' : 'W' },
-            'caps_curr_powerreading' : { 'object_path' : 'powercap/system_power','poll_interval' : 10000,'scale' : 1,'units' : 'W' },
-            'caps_max_powercap' : { 'object_path' : 'powercap/max_cap','poll_interval' : 10000,'scale' : 1,'units' : 'W' },
-            'caps_min_powercap' : { 'object_path' : 'powercap/min_cap','poll_interval' : 10000,'scale' : 1,'units' : 'W' },
-            'caps_norm_powercap' : { 'object_path' : 'powercap/n_cap','poll_interval' : 10000,'scale' : 1,'units' : 'W' },
-            'caps_user_powerlimit' : { 'object_path' : 'powercap/user_cap','poll_interval' : 10000,'scale' : 1,'units' : 'W' },
         },
         'labels' : {
         '176' :  { 'object_path' : 'temperature/cpu0/core0','poll_interval' : 5000,'scale' : -3,'units' : 'C',
@@ -395,10 +344,6 @@ HWMON_CONFIG = {
         '115' :  { 'object_path' : 'temperature/dimm13','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
         '116' :  { 'object_path' : 'temperature/dimm14','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
         '117' :  { 'object_path' : 'temperature/dimm15','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '94' :  { 'object_path' : 'temperature/membuf0','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '95' :  { 'object_path' : 'temperature/membuf1','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '96' :  { 'object_path' : 'temperature/membuf2','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '97' :  { 'object_path' : 'temperature/membuf3','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
         }
     },
     '5-0050' : {
@@ -443,44 +388,27 @@ HWMON_CONFIG = {
         '131' :  { 'object_path' : 'temperature/dimm29','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
         '132' :  { 'object_path' : 'temperature/dimm30','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
         '133' :  { 'object_path' : 'temperature/dimm31','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '98' :  { 'object_path' : 'temperature/membuf4','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '99' :  { 'object_path' : 'temperature/membuf5','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '100' :  { 'object_path' : 'temperature/membuf6','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
-        '101' :  { 'object_path' : 'temperature/membuf7','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
         }
     },
 }
 
-
 POWER_CONFIG = {
+    'latch_out': 'BMC_UCD_LATCH_LE',
     'power_good_in': 'SYS_PWROK_BUFF',
     'power_up_outs': [
         ('SOFTWARE_PGOOD', True),
         ('BMC_POWER_UP', True),
     ],
     'reset_outs': [
-        ('BMC_CP0_RESET_N', False),
-    ],
-    'pci_reset_outs': [
-        # net name, polarity, reset hold
-        ('BMC_VS1_PERST_N', False, False),
-        ('BMC_CP0_PERST_ENABLE_R', False, False),
     ],
 }
-
 
 # Miscellaneous non-poll sensor with system specific properties.
 # The sensor id is the same as those defined in ID_LOOKUP['SENSOR'].
 MISC_SENSORS = {
     0x5f : { 'class' : 'BootCountSensor' },
     0x05 : { 'class' : 'BootProgressSensor' },
-    0x08 : { 'class' : 'OccStatusSensor',
-        'os_path' : '/sys/class/i2c-adapter/i2c-3/3-0050/online' },
-    0x09 : { 'class' : 'OccStatusSensor',
-        'os_path' : '/sys/class/i2c-adapter/i2c-3/3-0051/online' },
     0xb5 : { 'class' : 'OperatingSystemStatusSensor' },
-    0xb3 : { 'class' : 'PowerCap',
-        'os_path' : '/sys/class/hwmon/hwmon3/user_powercap' },
 }
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
