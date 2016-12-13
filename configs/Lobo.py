@@ -266,38 +266,44 @@ ID_LOOKUP = {
 }
 
 GPIO_CONFIG = {}
-GPIO_CONFIG['SOFTWARE_PGOOD'] = \
-        {'gpio_pin': 'R1', 'direction': 'out'}
-GPIO_CONFIG['BMC_POWER_UP'] = \
+#GPIO_CONFIG['SOFTWARE_PGOOD'] = \
+#        {'gpio_pin': 'R1', 'direction': 'out'}
+GPIO_CONFIG['PWR_BTN_D_N'] = \
+		{'gpio_pin': 'D0', 'direction': 'in'}
+GPIO_CONFIG['BMC_PW_BTN_OUT_N'] = \
         {'gpio_pin': 'D1', 'direction': 'out'}
-GPIO_CONFIG['SYS_PWROK_BUFF'] = \
+GPIO_CONFIG['BMC_UCD_CPU0_PS_HOLD'] = \
         {'gpio_pin': 'D2', 'direction': 'in'}
-GPIO_CONFIG['PHY_RST_N'] = \
+GPIO_CONFIG['BMC_CPU0_PS_HOLD_OUT'] = \
         {'gpio_pin': 'D3', 'direction': 'out'}
-GPIO_CONFIG['HDD_PWR_EN'] = \
+GPIO_CONFIG['BMC_CPU0_RESET_N'] = \
         {'gpio_pin': 'D4', 'direction': 'out'}
-GPIO_CONFIG['CP0_DEVICES_RESET_N'] = \
-        {'gpio_pin': 'A1', 'direction': 'out'}
-GPIO_CONFIG['BMC_CP0_PERST_ENABLE'] = \
-        {'gpio_pin': 'A3', 'direction': 'out'}
-GPIO_CONFIG['BMC_UCD_LATCH_LE'] = \
-        {'gpio_pin': 'B4', 'direction': 'out'}
-GPIO_CONFIG['FSI_DATA'] = \
-        {'gpio_pin': 'E0', 'direction': 'out'}
-GPIO_CONFIG['FSI_CLK'] = \
-        {'gpio_pin': 'AA0', 'direction': 'out'}
-GPIO_CONFIG['FSI_ENABLE'] = \
-        {'gpio_pin': 'D0', 'direction': 'out'}
-GPIO_CONFIG['CRONUS_SEL'] = \
-        {'gpio_pin': 'P6', 'direction': 'out'}
+GPIO_CONFIG['BMC_UCD_PMF_RESOUT_N'] = \
+        {'gpio_pin': 'D5', 'direction': 'in'}
+GPIO_CONFIG['BMC_UCD_GPIO'] = \
+        {'gpio_pin': 'D7', 'direction': 'in'}
+GPIO_CONFIG['SYS_PWROK_BUF'] = \
+        {'gpio_pin': 'F7', 'direction': 'in'}
+GPIO_CONFIG['BMC_UCD_CPU0_RESET_REQ'] = \
+        {'gpio_pin': 'J6', 'direction': 'out'}
+GPIO_CONFIG['BMC_READY'] = \
+		{'gpio_pin': 'P5', 'direction': 'out'}
+##GPIO_CONFIG['FSI_DATA'] = \
+##        {'gpio_pin': 'E0', 'direction': 'out'}
+##GPIO_CONFIG['FSI_CLK'] = \
+##        {'gpio_pin': 'AA0', 'direction': 'out'}
+##GPIO_CONFIG['FSI_ENABLE'] = \
+##        {'gpio_pin': 'D0', 'direction': 'out'}
+##GPIO_CONFIG['CRONUS_SEL'] = \
+##        {'gpio_pin': 'P6', 'direction': 'out'}
 # FIXME: net name is FP_PWR_BTN_N in schematic
-GPIO_CONFIG['POWER_BUTTON'] = \
-        {'gpio_pin': 'I3', 'direction': 'both'}
+##GPIO_CONFIG['POWER_BUTTON'] = \
+##        {'gpio_pin': 'I3', 'direction': 'both'}
 # FIXME: net name is FP_RST_BTN_N in schematic
-GPIO_CONFIG['RESET_BUTTON'] = \
-        {'gpio_pin': 'G3', 'direction': 'both'}
-GPIO_CONFIG['PE_MEZZB_PRSNT_N'] = \
-        {'gpio_pin': 'P7', 'direction': 'in'}
+##GPIO_CONFIG['RESET_BUTTON'] = \
+##        {'gpio_pin': 'G3', 'direction': 'both'}
+##GPIO_CONFIG['PE_MEZZB_PRSNT_N'] = \
+##        {'gpio_pin': 'P7', 'direction': 'in'}
 
 HWMON_CONFIG = {
     '4-0050' : {
@@ -393,14 +399,14 @@ HWMON_CONFIG = {
 }
 
 POWER_CONFIG = {
-    'latch_out': 'BMC_UCD_LATCH_LE',
-    'power_good_in': 'SYS_PWROK_BUFF',
-    'power_up_outs': [
-        ('SOFTWARE_PGOOD', True),
-        ('BMC_POWER_UP', True),
-    ],
-    'reset_outs': [
-    ],
+#    'latch_out': 'BMC_UCD_LATCH_LE',
+#    'power_good_in': 'SYS_PWROK_BUFF',
+#    'power_up_outs': [
+#        ('SOFTWARE_PGOOD', True),
+#        ('BMC_POWER_UP', True),
+#    ],
+#    'reset_outs': [
+#    ],
 }
 
 # Miscellaneous non-poll sensor with system specific properties.
