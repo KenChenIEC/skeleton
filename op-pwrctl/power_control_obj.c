@@ -25,26 +25,13 @@ static GDBusObjectManagerServer *manager = NULL;
 
 time_t pgood_timeout_start = 0;
 
-GPIO pwr_btn_d_n     = (GPIO){ "PWR_BTN_D_N" };
-GPIO bmc_fw_btn_out_n      = (GPIO){ "BMC_PW_BTN_OUT_N" };
-GPIO bmc_ucd_cpu0_ps_hold   = (GPIO){ "BMC_UCD_CPU0_PS_HOLD" };
-GPIO bmc_cpu0_ps_hold_out   = (GPIO){ "BMC_CPU0_PS_HOLD_OUT" };
-GPIO bmc_cpu0_reset_n     = (GPIO){ "BMC_CPU0_RESET_N" };
-GPIO bmc_ucd_pmf_resout_n        = (GPIO){ "BMC_UCD_PMF_RESOUT_N" };
-GPIO bmc_ucd_gpio   = (GPIO){ "BMC_UCD_GPIO" };
-GPIO sys_pwrok_buf     = (GPIO){ "SYS_PWROK_BUF" };
-GPIO bmc_ucd_cpu0_reset_req        = (GPIO){ "BMC_UCD_CPU0_RESET_REQ" };
-GPIO bmc_ready		=	(GPIO){ "BMC_READY" };
-
-
-
 // TODO:  Change to interrupt driven instead of polling
 static gboolean
 poll_pgood(gpointer user_data)
 {
 	ControlPower *control_power = object_get_control_power((Object*)user_data);
 	Control* control = object_get_control((Object*)user_data);
-
+	printf(".");
 	//send the heartbeat
 	guint poll_int = control_get_poll_interval(control);
 	if(poll_int == 0)
@@ -63,24 +50,83 @@ poll_pgood(gpointer user_data)
 		pgood_timeout_start = 0;
 		return TRUE;
 	}
-	uint8_t pgood_state;
-
-	int rc = gpio_open(&g_power_gpio.power_good_in);
+	uint8_t power_state;
+	uint8_t btn_state;
+	uint8_t power_btn_pressed;
+	uint8_t pressCount = 0;
+	int rc = gpio_open(&g_power_gpio.power_btn_in);
 	if(rc != GPIO_OK) {
 		g_print("ERROR PowerControl: GPIO open error (gpio=%s,rc=%d)\n",
-				g_power_gpio.power_good_in.name, rc);
+				g_power_gpio.power_btn_in.name, rc);
 		return FALSE;
 	}
-	rc = gpio_read(&g_power_gpio.power_good_in, &pgood_state);
-	gpio_close(&g_power_gpio.power_good_in);
+	rc = gpio_open(&g_power_gpio.power_good_in);
+	rc = gpio_read(&g_power_gpio.power_btn_in, &btn_state);
 	if(rc == GPIO_OK)
 	{
+		while(btn_state == 0)
+		{
+		    rc = gpio_read(&g_power_gpio.power_btn_in, &btn_state);
+			rc = gpio_read(&g_power_gpio.power_good_in ,&power_state);
+			power_btn_pressed = 1;
+			pressCount++;
+			if((power_state == 1) && (pressCount > 200)){
+				printf("Detect power button, system will be powered off\n");
+				rc = gpio_open(&g_power_gpio.bmc_ucd_cpu0_reset_req);
+				rc = gpio_write(&g_power_gpio.bmc_ucd_cpu0_reset_req, 1);
+				gpio_close(&g_power_gpio.bmc_ucd_cpu0_reset_req);
+				sleep(1);
+				uint8_t data_bmc_ucd_pmf_resout_n;
+                rc = gpio_open(&g_power_gpio.bmc_ucd_pmf_resout_n);
+                rc = gpio_read(&g_power_gpio.bmc_ucd_pmf_resout_n, &data_bmc_ucd_pmf_resout_n);
+                gpio_close(&g_power_gpio.bmc_ucd_pmf_resout_n);
+				if(!data_bmc_ucd_pmf_resout_n){
+					while(!btn_state){
+						rc = gpio_read(&g_power_gpio.power_btn_in, &btn_state);
+						sleep(1);
+					}
+				}
+				power_btn_pressed = 0;
+				control_power_emit_power_lost(control_power);
+				control_emit_goto_system_state(control,"HOST_POWERED_OFF");
+			}
+		}
+		if(power_btn_pressed){
+			if(power_state == 0){
+				printf("Detec power button, system will be powered on\n");
+				rc = gpio_open(&g_power_gpio.bmc_ucd_cpu0_reset_req);
+                rc = gpio_write(&g_power_gpio.bmc_ucd_cpu0_reset_req, 0);
+                gpio_close(&g_power_gpio.bmc_ucd_cpu0_reset_req);
+				rc = gpio_open(&g_power_gpio.bmc_pwr_btn_out_n);
+                rc = gpio_write(&g_power_gpio.bmc_pwr_btn_out_n, 0);
+                gpio_close(&g_power_gpio.bmc_pwr_btn_out_n);
+				sleep(1);
+				uint8_t data_data_bmc_ucd_pmf_resout_n;
+				uint8_t data_bmc_ucd_gpio;
+				if(data_data_bmc_ucd_pmf_resout_n & data_bmc_ucd_gpio){
+	                rc = gpio_open(&g_power_gpio.bmc_cpu0_reset_n);
+					rc = gpio_write(&g_power_gpio.bmc_cpu0_reset_n, 0);
+	                gpio_close(&g_power_gpio.bmc_cpu0_reset_n);
+				}
+				else{
+                    rc = gpio_open(&g_power_gpio.bmc_cpu0_reset_n);
+                    rc = gpio_write(&g_power_gpio.bmc_cpu0_reset_n, 0);
+                    gpio_close(&g_power_gpio.bmc_cpu0_reset_n);
+				}
+				power_btn_pressed = 0;
+	            rc = gpio_read(&g_power_gpio.power_good_in ,&power_state);
+                control_power_emit_power_good(control_power);
+                control_emit_goto_system_state(control,"HOST_POWERED_ON");
+			}
+		}
+#if 0
 		//if changed, set property and emit signal
 		if(pgood_state != control_power_get_pgood(control_power))
 		{
 			int i;
 			uint8_t reset_state;
 			control_power_set_pgood(control_power, pgood_state);
+			//TODO: change with button behavior
 			if(pgood_state == 0)
 			{
 				control_power_emit_power_lost(control_power);
@@ -141,14 +187,15 @@ poll_pgood(gpointer user_data)
 				gpio_close(pci_reset_out);
 			}
 		}
+#endif
 	} else {
 		g_print("ERROR PowerControl: GPIO read error (gpio=%s,rc=%d)\n",
-				g_power_gpio.power_good_in.name, rc);
+				g_power_gpio.power_btn_in.name, rc);
 		//return false so poll won't get called anymore
 		return FALSE;
 	}
 	//pgood is not at desired state yet
-	if(pgood_state != control_power_get_state(control_power) &&
+	if(power_state != control_power_get_state(control_power) &&
 			control_power_get_pgood_timeout(control_power) > 0)
 	{
 		if(pgood_timeout_start == 0 ) {
@@ -172,6 +219,7 @@ on_boot_progress(GDBusConnection *connection,
 		GVariant *parameters,
 		gpointer user_data)
 {
+#if 0
 	gchar *boot_progress;
 	uint8_t pgood_state;
 	uint8_t reset_state;
@@ -194,11 +242,11 @@ on_boot_progress(GDBusConnection *connection,
 	if(rc != GPIO_OK)
 	{
 		g_print("ERROR PowerControl: on_boot_progress(): GPIO open error (gpio=%s,rc=%d)\n",
-			g_power_gpio.power_good_in.name, rc);
+			g_power_gpio.power_good_in, rc);
 		return;
 	}
 	rc = gpio_read(&g_power_gpio.power_good_in, &pgood_state);
-	gpio_close(&g_power_gpio.power_good_in);
+	gpio_close(&g_power_gpio.power_btn_in);
 	if(rc != GPIO_OK || pgood_state != 1)
 		return;
 
@@ -224,6 +272,7 @@ on_boot_progress(GDBusConnection *connection,
 		g_print("Released pci reset: %s - %s\n", pci_reset_out->name, boot_progress);
 	}
 	g_pci_reset_held = 0;
+#endif
 }
 
 static gboolean
@@ -257,6 +306,7 @@ on_set_power_state(ControlPower *pwr,
 			} else {
 				control_emit_goto_system_state(control,"HOST_POWERING_OFF");
 			}
+#if 0
 			for (i = 0; i < g_power_gpio.num_power_up_outs; i++) {
 				GPIO *power_pin = &g_power_gpio.power_up_outs[i];
 				error = gpio_open(power_pin);
@@ -276,11 +326,14 @@ on_set_power_state(ControlPower *pwr,
 			}
 			if(error != GPIO_OK) { break;	}
 			control_power_set_state(pwr,state);
+#endif
 		} while(0);
+#if 0
 		if(error != GPIO_OK)
 		{
 			g_print("ERROR PowerControl: GPIO set power state (rc=%d)\n",error);
 		}
+#endif
 	}
 	return TRUE;
 }
@@ -308,66 +361,6 @@ on_get_power_state(ControlPower *pwr,
 }
 
 static int
-poweron_lobo(ControlPower *pwr,
-        GDBusMethodInvocation *invocation,
-        guint state,
-        gpointer user_data)
-//        PowerGpio *power_gpio,
-//        ControlPower* control_power)
-//		  gpointer user_data)
-{
-//    g_dbus_object_manager_server_set_connection(manager, connection);
-	Control* control = object_get_control((Object*)user_data);
-	printf("entry function");
-	int rc;
-	uint8_t data_bmc_ucd_pmf_resout_n;
-	uint8_t data_bmc_ucd_gpio;
-	uint8_t data_sys_pwrok_buf;
-	control_power_complete_set_power_state(pwr,invocation);
-	control_emit_goto_system_state(control,"HOST_POWERING_ON");
-	//gpio_init(connection, &pwr_btn_d_n);
-//	rc = gpio_init(connection, &bmc_fw_btn_out_n);
-	//gpio_init(connection, &bmc_ucd_cpu0_ps_hold);
-//	gpio_init(connection, &bmc_cpu0_ps_hold_out);
-//	rc |= gpio_init(connection, &bmc_cpu0_reset_n);
-//	rc |= gpio_init(connection, &bmc_ucd_pmf_resout_n);
-//	rc |= gpio_init(connection, &bmc_ucd_gpio);
-//	rc |= gpio_init(connection, &sys_pwrok_buf);
-//	rc |= gpio_init(connection, &bmc_ucd_cpu0_reset_req);
-	rc |= gpio_write(&bmc_ucd_cpu0_reset_req, 0);
-	rc |= gpio_write(&bmc_fw_btn_out_n, 0);
-	rc |= gpio_read(&bmc_ucd_pmf_resout_n, &data_bmc_ucd_pmf_resout_n);
-	rc |= gpio_read(&bmc_ucd_gpio, &data_bmc_ucd_gpio);
-
-	if(data_bmc_ucd_pmf_resout_n & data_bmc_ucd_gpio){
-		gpio_write(&bmc_cpu0_reset_n, 0);
-	}
-	else{
-		gpio_write(&bmc_cpu0_reset_n, 1);
-	}
-
-	//By pass D2 to D3, this is templete solution, will be removed
-	gpio_write(&bmc_cpu0_ps_hold_out,1);
-
-	usleep(50 * 1000);
-	
-	gpio_read(&sys_pwrok_buf,&data_sys_pwrok_buf);
-	if(data_sys_pwrok_buf)
-		control_emit_goto_system_state(control,"HOST_POWERED_ON");
-
-    //gpio_close(&pwr_btn_d_n);
-    gpio_close(&bmc_fw_btn_out_n);
-    //gpio_close(&bmc_ucd_cpu0_ps_hold);
-    gpio_close(&bmc_cpu0_ps_hold_out);
-    gpio_close(&bmc_cpu0_reset_n);
-    gpio_close(&bmc_ucd_pmf_resout_n);
-    gpio_close(&bmc_ucd_gpio);
-    gpio_close(&sys_pwrok_buf);
-    gpio_close(&bmc_ucd_cpu0_reset_req);
-
-	return rc; 
-}
-static int
 set_up_gpio(GDBusConnection *connection,
 		PowerGpio *power_gpio,
 		ControlPower* control_power)
@@ -376,7 +369,7 @@ set_up_gpio(GDBusConnection *connection,
 	int rc;
 	int i;
 	uint8_t pgood_state;
-
+#if 0
 	// get gpio device paths
 	if(power_gpio->latch_out.name != NULL) {  /* latch is optional */
 		rc = gpio_init(connection, &power_gpio->latch_out);
@@ -384,7 +377,7 @@ set_up_gpio(GDBusConnection *connection,
 			error = rc;
 		}
 	}
-	rc = gpio_init(connection, &power_gpio->power_good_in);
+	rc = gpio_init(connection, &power_gpio->power_btn_in);
 	if(rc != GPIO_OK) {
 		error = rc;
 	}
@@ -426,7 +419,20 @@ set_up_gpio(GDBusConnection *connection,
 			g_print("PowerControl asserted latch %s\n", power_gpio->latch_out.name);
 		}
 	}
+#endif
+	rc = gpio_init(connection, &power_gpio->power_good_in);
+	rc = gpio_init(connection, &power_gpio->power_btn_in);
+	rc = gpio_init(connection, &power_gpio->bmc_ucd_pmf_resout_n);
+	rc = gpio_init(connection, &power_gpio->bmc_ucd_gpio);
+	rc = gpio_init(connection, &power_gpio->bmc_pwr_btn_out_n);
+    rc = gpio_init(connection, &power_gpio->bmc_cpu0_ps_hold_out);
+    rc = gpio_init(connection, &power_gpio->bmc_cpu0_reset_n);
+    rc = gpio_init(connection, &power_gpio->bmc_ucd_cpu0_reset_req);
+	rc = gpio_init(connection, &power_gpio->bmc_ready);
 
+	rc = gpio_open(&power_gpio->bmc_ready);
+	rc = gpio_write(&power_gpio->bmc_ready, 1);
+	gpio_close(&power_gpio->bmc_ready);
 	rc = gpio_open(&power_gpio->power_good_in);
 	if(rc != GPIO_OK) {
 		return rc;
@@ -474,7 +480,7 @@ on_bus_acquired(GDBusConnection *connection,
 	//define method callbacks here
 	g_signal_connect(control_power,
 			"handle-set-power-state",
-			G_CALLBACK(poweron_lobo),
+			G_CALLBACK(on_set_power_state),
 			object); /* user_data */
 
 	g_signal_connect(control_power,
@@ -502,10 +508,9 @@ on_bus_acquired(GDBusConnection *connection,
 #endif
 	/* Export the object (@manager takes its own reference to @object) */
 	g_dbus_object_manager_server_set_connection(manager, connection);
-	printf("check point\n");
 	g_dbus_object_manager_server_export(manager, G_DBUS_OBJECT_SKELETON(object));
 	g_object_unref(object);
-#if 0
+
 	if(read_power_gpio(connection, &g_power_gpio) != TRUE) {
 		g_print("ERROR PowerControl: could not read power GPIO configuration\n");
 	}
@@ -514,91 +519,17 @@ on_bus_acquired(GDBusConnection *connection,
 	if(rc != GPIO_OK) {
 		g_print("ERROR PowerControl: GPIO setup (rc=%d)\n",rc);
 	}
-#endif
-	int rc = gpio_init(connection, &bmc_fw_btn_out_n);
-    rc |= gpio_init(connection, &bmc_cpu0_reset_n);
-    rc |= gpio_init(connection, &bmc_ucd_pmf_resout_n);
-    rc |= gpio_init(connection, &bmc_ucd_gpio);
-    rc |= gpio_init(connection, &sys_pwrok_buf);
-    rc |= gpio_init(connection, &bmc_ucd_cpu0_reset_req);
-	rc |= gpio_init(connection, &bmc_ready);
 	//start poll
-#if 0
 	pgood_timeout_start = 0;
 	int poll_interval = atoi(cmd->argv[1]);
 	int pgood_timeout = atoi(cmd->argv[2]);
-	if(poll_interval < 1000 || pgood_timeout <5) {
-		g_print("ERROR PowerControl: poll_interval < 1000 or pgood_timeout < 5\n");
+	if(poll_interval < 1 || pgood_timeout <1) {
+		g_print("ERROR PowerControl: poll_interval < 1 or pgood_timeout < 1\n");
 	} else {
 		control_set_poll_interval(control,poll_interval);
 		control_power_set_pgood_timeout(control_power,pgood_timeout);
 		g_timeout_add(poll_interval, poll_pgood, object);
 	}
-#endif
-#if 0
-	int rc = poweron_lobo(connection, user_data);
-	if(rc != GPIO_OK){
-		g_print("fail to power on\n");
-		printf("fail to power on\n");
-	}
-#endif
-#if 1
-	uint8_t data_bmc_ucd_pmf_resout_n;
-    uint8_t data_bmc_ucd_gpio;
-    uint8_t data_sys_pwrok_buf;
-	printf("finish init\n");
-    //gpio_close(&pwr_btn_d_n);
-    gpio_open(&bmc_fw_btn_out_n);
-    //gpio_close(&bmc_ucd_cpu0_ps_hold);
-    gpio_open(&bmc_cpu0_ps_hold_out);
-    gpio_open(&bmc_cpu0_reset_n);
-    gpio_open(&bmc_ucd_pmf_resout_n);
-    gpio_open(&bmc_ucd_gpio);
-    gpio_open(&sys_pwrok_buf);
-    gpio_open(&bmc_ucd_cpu0_reset_req);
-	gpio_open(&bmc_ready);
-	rc |= gpio_write(&bmc_ready, 1);
-	printf("open ");
-	rc |= gpio_write(&bmc_ucd_cpu0_reset_req, 0);
-	printf("1 ");
-    rc |= gpio_write(&bmc_fw_btn_out_n, 0);
-	printf("2 ");
-    rc |= gpio_read(&bmc_ucd_pmf_resout_n, &data_bmc_ucd_pmf_resout_n);
-	printf("3 ");
-    rc |= gpio_read(&bmc_ucd_gpio, &data_bmc_ucd_gpio);
-	printf(" rc = %d data_bmc_ucd_pmf_resout_n = %d data_bmc_ucd_gpio = %d\n", rc , data_bmc_ucd_pmf_resout_n ,data_bmc_ucd_gpio);
-    if(data_bmc_ucd_pmf_resout_n & data_bmc_ucd_gpio){
-       rc |= gpio_write(&bmc_cpu0_reset_n, 0);
-    }
-    else{
-       rc |= gpio_write(&bmc_cpu0_reset_n, 1);
-    }
-
-    //By pass D2 to D3, this is templete solution, will be removed
-	printf("rc =%d before cpu hold\n",rc);
-    rc |= gpio_write(&bmc_cpu0_ps_hold_out, 1);
-    printf("rc =%d after cpu hold\n",rc);
-
-    usleep(50 * 1000);
-
-    rc |= gpio_read(&sys_pwrok_buf,&data_sys_pwrok_buf);
-    if(data_sys_pwrok_buf)
-		printf("system powered on");
-        //control_emit_goto_system_state(control,"HOST_POWERED_ON");
-	printf("final rc = %d\n",rc);
-	gpio_close(&bmc_ready);
-    //gpio_close(&pwr_btn_d_n);
-    gpio_close(&bmc_fw_btn_out_n);
-    //gpio_close(&bmc_ucd_cpu0_ps_hold);
-    gpio_close(&bmc_cpu0_ps_hold_out);
-    gpio_close(&bmc_cpu0_reset_n);
-    gpio_close(&bmc_ucd_pmf_resout_n);
-    gpio_close(&bmc_ucd_gpio);
-    gpio_close(&sys_pwrok_buf);
-    gpio_close(&bmc_ucd_cpu0_reset_req);
-
-
-#endif 	
 }
 
 static void
