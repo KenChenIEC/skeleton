@@ -24,24 +24,40 @@
 
 typedef struct PowerGpio {
 	/* Optional active high pin enabling writes to latched power_up pins. */
-	GPIO latch_out; /* NULL name if not used. */
+	//GPIO latch_out; /* NULL name if not used. */
 	/* Active high pin that is asserted following successful host power up. */
 	GPIO power_good_in;
 	/* Selectable polarity pins enabling host power rails. */
-	size_t num_power_up_outs;
-	GPIO *power_up_outs;
+	//size_t num_power_up_outs;
+	//GPIO *power_up_outs;
 	/* TRUE for active high */
-	gboolean *power_up_pols;
+	//gboolean *power_up_pols;
 	/* Selectable polarity pins holding system complexes in reset. */
-	size_t num_reset_outs;
-	GPIO *reset_outs;
+	//size_t num_reset_outs;
+	//GPIO *reset_outs;
 	/* TRUE for active high */
-	gboolean *reset_pols;
-	size_t num_pci_reset_outs;
-	GPIO *pci_reset_outs;
+	//gboolean *reset_pols;
+	//size_t num_pci_reset_outs;
+	//GPIO *pci_reset_outs;
 	/* TRUE for active high */
-	gboolean *pci_reset_pols;
-	gboolean *pci_reset_holds;
+	//gboolean *pci_reset_pols;
+	//gboolean *pci_reset_holds;
+
+	GPIO power_btn_in;
+	GPIO bmc_ucd_cpu0_ps_hold;
+	GPIO bmc_ucd_pmf_resout_n;
+	GPIO bmc_ucd_gpio;
+	GPIO sys_pwrok_buf;
+	GPIO bmc_pwr_btn_out_n;
+	gboolean bmc_pwr_btn_out_n_pols;
+	GPIO bmc_cpu0_ps_hold_out;
+	gboolean bmc_cpu0_ps_hold_out_pols;
+	GPIO bmc_cpu0_reset_n;
+	gboolean bmc_cpu0_reset_n_pols;
+	GPIO bmc_ucd_cpu0_reset_req;
+	gboolean bmc_ucd_cpu0_reset_req_pols;
+	GPIO bmc_ready;
+	gboolean bmc_ready_req_pols;
 } PowerGpio;
 
 /* Read system configuration for power GPIOs. */

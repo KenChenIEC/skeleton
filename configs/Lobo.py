@@ -270,7 +270,7 @@ GPIO_CONFIG = {}
 #        {'gpio_pin': 'R1', 'direction': 'out'}
 GPIO_CONFIG['PWR_BTN_D_N'] = \
 		{'gpio_pin': 'D0', 'direction': 'in'}
-GPIO_CONFIG['BMC_PW_BTN_OUT_N'] = \
+GPIO_CONFIG['BMC_PWR_BTN_OUT_N'] = \
         {'gpio_pin': 'D1', 'direction': 'out'}
 GPIO_CONFIG['BMC_UCD_CPU0_PS_HOLD'] = \
         {'gpio_pin': 'D2', 'direction': 'in'}
@@ -398,7 +398,7 @@ HWMON_CONFIG = {
     },
 }
 
-POWER_CONFIG = {
+#POWER_CONFIG = {
 #    'latch_out': 'BMC_UCD_LATCH_LE',
 #    'power_good_in': 'SYS_PWROK_BUFF',
 #    'power_up_outs': [
@@ -407,6 +407,17 @@ POWER_CONFIG = {
 #    ],
 #    'reset_outs': [
 #    ],
+POWER_CONFIG = {
+    'power_btn_in': 'PWR_BTN_D_N',
+    'power_good_in': 'SYS_PWROK_BUF',
+    'bmc_ucd_cpu0_ps_hold': 'BMC_UCD_CPU0_PS_HOLD',
+    'bmc_ucd_pmf_resout_n': 'BMC_UCD_PMF_RESOUT_N',
+    'bmc_ucd_gpio': 'BMC_UCD_GPIO',
+    'bmc_pwr_btn_out_n': [('BMC_PWR_BTN_OUT_N', True)],
+    'bmc_cpu0_ps_hold_out': [('BMC_CPU0_PS_HOLD_OUT',True)],
+    'bmc_cpu0_reset_n': [('BMC_CPU0_RESET_N',True)],
+    'bmc_ucd_cpu0_reset_req': [('BMC_UCD_CPU0_RESET_REQ',True)],
+    'bmc_ready': [('BMC_READY',True)],
 }
 
 # Miscellaneous non-poll sensor with system specific properties.

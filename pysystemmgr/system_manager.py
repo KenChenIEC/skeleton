@@ -184,14 +184,27 @@ class SystemManager(DbusProperties, DbusObjectManager):
         return r
 
     @dbus.service.method(DBUS_NAME, in_signature='',
-            out_signature='ssa(sb)a(sb)a(sbb)')
+            out_signature='sssssa(sb)a(sb)a(sb)a(sb)a(sb)')
     def getPowerConfiguration(self):
+        power_btn_in = System.POWER_CONFIG.get('power_btn_in', '')
+        print "power_btn"
         power_good_in = System.POWER_CONFIG.get('power_good_in', '')
-        latch_out = System.POWER_CONFIG.get('latch_out', '')
-        power_up_outs = System.POWER_CONFIG.get('power_up_outs', [])
-        reset_outs = System.POWER_CONFIG.get('reset_outs', [])
-        pci_reset_outs = System.POWER_CONFIG.get('pci_reset_outs', [])
-        r = [power_good_in, latch_out, power_up_outs, reset_outs, pci_reset_outs]
+        bmc_ucd_cpu0_ps_hold = System.POWER_CONFIG.get('bmc_ucd_cpu0_ps_hold', '')
+        bmc_ucd_pmf_resout_n = System.POWER_CONFIG.get('bmc_ucd_pmf_resout_n', '')
+        bmc_ucd_gpio =  System.POWER_CONFIG.get('bmc_ucd_gpio', '');
+        print "test point 1"
+        bmc_pwr_btn_out_n = System.POWER_CONFIG.get('bmc_pwr_btn_out_n', [])
+        bmc_cpu0_ps_hold_out = System.POWER_CONFIG.get('bmc_cpu0_ps_hold_out', [])
+        bmc_cpu0_reset_n = System.POWER_CONFIG.get('bmc_cpu0_reset_n', [])
+        print "test point 2"
+        bmc_ucd_cpu0_reset_req = System.POWER_CONFIG.get('bmc_ucd_cpu0_reset_req', [])
+        bmc_ready = System.POWER_CONFIG.get('bmc_ready', [])
+        #latch_out = System.POWER_CONFIG.get('latch_out', '')
+        #power_up_outs = System.POWER_CONFIG.get('power_up_outs', [])
+        #reset_outs = System.POWER_CONFIG.get('reset_outs', [])
+        #pci_reset_outs = System.POWER_CONFIG.get('pci_reset_outs', [])
+        #r = [power_good_in, latch_out, power_up_outs, reset_outs, pci_reset_outs]
+        r = [power_btn_in, power_good_in, bmc_ucd_cpu0_ps_hold, bmc_ucd_pmf_resout_n, bmc_ucd_gpio, bmc_pwr_btn_out_n, bmc_cpu0_ps_hold_out, bmc_cpu0_reset_n, bmc_ucd_cpu0_reset_req, bmc_ready]
         print "Power GPIO config: " + str(r)
         return r
 
