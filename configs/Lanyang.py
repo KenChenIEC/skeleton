@@ -302,17 +302,17 @@ HWMON_CONFIG = {
         },
 	'9-0048': {
 		'names': {
-            'temp1_input' : { 'object_path' : 'temperature/ambient','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
+            'temp1_input' : { 'object_path' : 'temperature/ambient0','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
 			}
 		},
     '9-0049': {
         'names': {
-            'temp1_input' : { 'object_path' : 'temperature/ambient','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
+            'temp1_input' : { 'object_path' : 'temperature/ambient1','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
             }
         },
     '9-004a': {
         'names': {
-            'temp1_input' : { 'object_path' : 'temperature/ambient','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
+            'temp1_input' : { 'object_path' : 'temperature/ambient2','poll_interval' : 5000,'scale' : -3,'units' : 'C' },
             }
         },
     '3-006b': {
