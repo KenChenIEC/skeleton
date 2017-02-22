@@ -268,7 +268,7 @@ GPIO_CONFIG = {}
 GPIO_CONFIG['SOFTWARE_PGOOD'] = \
         {'gpio_pin': 'R1', 'direction': 'out'}
 GPIO_CONFIG['BMC_POWER_UP'] = \
-        {'gpio_pin': 'D1', 'direction': 'out'}
+        {'gpio_pin': 'P5', 'direction': 'out'}
 GPIO_CONFIG['SYS_PWROK_BUFF'] = \
         {'gpio_pin': 'D2', 'direction': 'in'}
 GPIO_CONFIG['PHY_RST_N'] = \
@@ -290,7 +290,7 @@ GPIO_CONFIG['POWER_BUTTON'] = \
         {'gpio_pin': 'I3', 'direction': 'both'}
 # FIXME: net name is FP_RST_BTN_N in schematic
 GPIO_CONFIG['RESET_BUTTON'] = \
-        {'gpio_pin': 'AA0', 'direction': 'both'}
+        {'gpio_pin': 'E3', 'direction': 'both'}
 GPIO_CONFIG['PE_MEZZB_PRSNT_N'] = \
         {'gpio_pin': 'P7', 'direction': 'in'}
 
