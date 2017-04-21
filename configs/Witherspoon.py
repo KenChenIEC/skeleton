@@ -20,7 +20,6 @@ EXIT_STATE_DEPEND = {
     'BMC_STARTING' : {
         '/org/openbmc/control/chassis0': 0,
         '/org/openbmc/control/power0' : 0,
-        '/org/openbmc/control/host0' : 0,
         '/org/openbmc/control/flash/bios' : 0,
     },
 }
@@ -212,12 +211,12 @@ ID_LOOKUP = {
         'PRODUCT_47'   : '<inventory_root>/system/misc',
     },
     'SENSOR' : {
-        0x04 : '/org/openbmc/sensors/host/HostStatus',
-        0x05 : '/org/openbmc/sensors/host/BootProgress',
-        0x08 : '/org/openbmc/sensors/host/cpu0/OccStatus',
-        0x09 : '/org/openbmc/sensors/host/cpu1/OccStatus',
-        0x0c : '<inventory_root>/system/chassis/motherboard/cpu0',
-        0x0e : '<inventory_root>/system/chassis/motherboard/cpu1',
+        0x02 : '/org/openbmc/sensors/host/HostStatus',
+        0x03 : '/org/openbmc/sensors/host/BootProgress',
+        0xfc : '/org/openbmc/sensors/host/cpu0/OccStatus',
+        0xfd : '/org/openbmc/sensors/host/cpu1/OccStatus',
+        0x5a : '<inventory_root>/system/chassis/motherboard/cpu0',
+        0xa4 : '<inventory_root>/system/chassis/motherboard/cpu1',
         0x1e : '<inventory_root>/system/chassis/motherboard/dimm3',
         0x1f : '<inventory_root>/system/chassis/motherboard/dimm2',
         0x20 : '<inventory_root>/system/chassis/motherboard/dimm1',
@@ -282,17 +281,20 @@ ID_LOOKUP = {
         0x5b : '<inventory_root>/system/chassis/motherboard/membuf5',
         0x5c : '<inventory_root>/system/chassis/motherboard/membuf6',
         0x5d : '<inventory_root>/system/chassis/motherboard/membuf7',
-        0x5f : '/org/openbmc/sensors/host/BootCount',
-        0x60 : '<inventory_root>/system/chassis/motherboard',
-        0x61 : '<inventory_root>/system/systemevent',
-        0x62 : '<inventory_root>/system/powerlimit',
-        0x63 : '<inventory_root>/system/chassis/motherboard/refclock',
-        0x64 : '<inventory_root>/system/chassis/motherboard/pcieclock',
-        0xb1 : '<inventory_root>/system/chassis/motherboard/todclock',
-        0xb2 : '<inventory_root>/system/chassis/motherboard/apss',
-        0xb3 : '/org/openbmc/sensors/host/powercap',
-        0xb5 : '/org/openbmc/sensors/host/OperatingSystemStatus',
-        0xb6 : '<inventory_root>/system/chassis/motherboard/pcielink',
+        0x07 : '/org/openbmc/sensors/host/BootCount',
+        0x0c : '<inventory_root>/system/chassis/motherboard',
+        0x01 : '<inventory_root>/system/systemevent',
+        0x08 : '<inventory_root>/system/powerlimit',
+        0x0d : '<inventory_root>/system/chassis/motherboard/refclock',
+        0x0e : '<inventory_root>/system/chassis/motherboard/pcieclock',
+        0x0f : '<inventory_root>/system/chassis/motherboard/todclock',
+        0x10 : '<inventory_root>/system/chassis/motherboard/apss',
+        0x06 : '/org/openbmc/sensors/host/powercap',
+        0x02 : '/org/openbmc/sensors/host/OperatingSystemStatus',
+        0x04 : '<inventory_root>/system/chassis/motherboard/pcielink',
+        0xD8 : '/org/openbmc/sensors/host/PowerSupplyRedundancy',
+        0xda : '/org/openbmc/sensors/host/TurboAllowed',
+        0xb4 : '/org/openbmc/sensors/host/PowerSupplyDerating',
     },
     'GPIO_PRESENT' : {}
 }
@@ -300,75 +302,49 @@ ID_LOOKUP = {
 GPIO_CONFIG = {}
 GPIO_CONFIG['BMC_POWER_UP'] = \
         {'gpio_pin': 'D1', 'direction': 'out'}
+GPIO_CONFIG['SOFTWARE_PGOOD'] = \
+        {'gpio_pin': 'R1', 'direction': 'out'}
 GPIO_CONFIG['SYS_PWROK_BUFF'] = \
         {'gpio_pin': 'D2', 'direction': 'in'}
-GPIO_CONFIG['BMC_WD_CLEAR_PULSE_N'] = \
-        {'gpio_pin': 'N5', 'direction': 'out'}
+
+# PV_CP_MD_JTAG_ATTENTION_N
 GPIO_CONFIG['CHECKSTOP'] = \
         {'gpio_pin': 'J2', 'direction': 'falling'}
 
-# witherspoon: not connect
-#GPIO_CONFIG['CM1_OE_R_N'] = \
-#        {'gpio_pin': 'A2', 'direction': 'out'}
-
 GPIO_CONFIG['BMC_CP0_RESET_N'] = \
         {'gpio_pin': 'A1', 'direction': 'out'}
-
-# witherspoon: No centaur
-#GPIO_CONFIG['BMC_CFAM_RESET_N_R'] = \
-#        {'gpio_pin': 'J2', 'direction': 'out'}
-
-
-# FIXME: reset pcie switch, looks like BMC_VS1_PERST_N , see workbook fig.46
-#GPIO_CONFIG['PEX8718_DEVICES_RESET_N'] = \
-#        {'gpio_pin': 'B7', 'direction': 'out'}
+# pcie switch reset
 GPIO_CONFIG['BMC_VS1_PERST_N'] = \
         {'gpio_pin': 'B7', 'direction': 'out'}
-
-# FIXME: reset pcie slots, looks like BMC_CP0_PERST_ENABLE_R, see workbook fig.46
-# firestone: gpiog1, gpiog2
-#GPIO_CONFIG['CP0_DEVICES_RESET_N'] = \
-#        {'gpio_pin': 'B1', 'direction': 'out'}
-# FIXME: G2 for Firestone.. Witherspoon: no
-#GPIO_CONFIG['CP1_DEVICES_RESET_N'] = \
-#        {'gpio_pin': 'A1', 'direction': 'out'}
+# pcie slots reset - not connected?
 GPIO_CONFIG['BMC_CP0_PERST_ENABLE_R'] = \
         {'gpio_pin': 'A3', 'direction': 'out'}
 
-#FIXME: witherspoon: SOFT_FSI_CLK: AA0, SOFT_FSI_DAT: E0, see workbook fig.44
+# SOFT_FSI_DAT
 GPIO_CONFIG['FSI_DATA'] = \
         {'gpio_pin': 'E0', 'direction': 'out'}
+# SOFT_FSI_CLK
 GPIO_CONFIG['FSI_CLK'] = \
         {'gpio_pin': 'AA0', 'direction': 'out'}
+# BMC_FSI_IN_ENA
 GPIO_CONFIG['FSI_ENABLE'] = \
         {'gpio_pin': 'D0', 'direction': 'out'}
-
-# FIXME: both witherspoon and garrison, gpioa6 is FSI_JMFG0_PRSNT_N
+# FSI_JMFG0_PRSNT_N
 GPIO_CONFIG['CRONUS_SEL'] = \
         {'gpio_pin': 'A6', 'direction': 'out'}
 
-# FIXME: ?? firestone gpioj3 is NC
-#GPIO_CONFIG['BMC_THROTTLE'] = \
-#        {'gpio_pin': 'J3', 'direction': 'out'}
-
-#FIXME: ?? witherspoon: FP_ID_BTN_N_R, firestone: PD_BMC_IDBTN_IN_OUT_N - it is not connected
-GPIO_CONFIG['IDBTN']       = \
-    { 'gpio_pin': 'Q7', 'direction': 'out' }
-
-#FIXME: witherspoon: FP_PWR_BTN_N, firstone: NC_BMC_PWBTN_IN_N gpioe0 - not connected
+# FP_PWR_BTN_N
 GPIO_CONFIG['POWER_BUTTON'] = \
         {'gpio_pin': 'I3', 'direction': 'both'}
-# witherspoon: BMC_NMIBTN_IN_N, firestone: BMC_NMIBTN_IN_N
+# BMC_NMIBTN_IN_N
 GPIO_CONFIG['RESET_BUTTON'] = \
         {'gpio_pin': 'J1', 'direction': 'both'}
 
-GPIO_CONFIG['PS0_PRES_N'] = \
-        {'gpio_pin': 'P7', 'direction': 'in'}
-GPIO_CONFIG['PS1_PRES_N'] = \
-        {'gpio_pin': 'N0', 'direction': 'in'}
-# witherspoon: CARD_PRES_N
-GPIO_CONFIG['CARD_PRES_N'] = \
-        {'gpio_pin': 'I0', 'direction': 'in'}
+# FIXME: needed for Witherspoon?
+# Tracked by openbmc/openbmc#814
+# FP_ID_BTN_N
+GPIO_CONFIG['IDBTN'] = \
+    {'gpio_pin': 'Q7', 'direction': 'out'}
 
 HWMON_CONFIG = {
     '4-0050' : {
@@ -478,28 +454,50 @@ HWMON_CONFIG = {
 }
 
 
-POWER_CONFIG = {
-    'power_good_in' : 'SYS_PWROK_BUFF',
-    'power_up_outs' : [
-        ('BMC_POWER_UP', True),
-    ],
-    'reset_outs' : [
-    ],
+GPIO_CONFIGS = {
+    'power_config' : {
+        'power_good_in' : 'SYS_PWROK_BUFF',
+        'power_up_outs' : [
+            ('SOFTWARE_PGOOD', True),
+            ('BMC_POWER_UP', True),
+        ],
+        'reset_outs' : [
+            ('BMC_CP0_RESET_N', False),
+        ],
+        'pci_reset_outs': [
+            # net name, polarity, reset hold
+            ('BMC_VS1_PERST_N', False, False),
+            ('BMC_CP0_PERST_ENABLE_R', False, False),
+        ],
+    },
+    'hostctl_config' : {
+        'fsi_data' : 'FSI_DATA',
+        'fsi_clk' : 'FSI_CLK',
+        'fsi_enable' : 'FSI_ENABLE',
+        'cronus_sel' : 'CRONUS_SEL',
+        'optionals' : [
+        ],
+    },
 }
 
 
 # Miscellaneous non-poll sensor with system specific properties.
 # The sensor id is the same as those defined in ID_LOOKUP['SENSOR'].
 MISC_SENSORS = {
-    0x5f : { 'class' : 'BootCountSensor' },
-    0x05 : { 'class' : 'BootProgressSensor' },
-    0x08 : { 'class' : 'OccStatusSensor',
-        'os_path' : '/sys/class/i2c-adapter/i2c-3/3-0050/online' },
-    0x09 : { 'class' : 'OccStatusSensor',
-        'os_path' : '/sys/class/i2c-adapter/i2c-3/3-0051/online' },
-    0xb5 : { 'class' : 'OperatingSystemStatusSensor' },
-    0xb3 : { 'class' : 'PowerCap',
+    0x07 : { 'class' : 'BootCountSensor' },
+    0x03 : { 'class' : 'BootProgressSensor' },
+    #OCC active sensors aren't in the P9 XML yet.  These are wrong.
+    0xfc : { 'class' : 'OccStatusSensor',
+        'os_path' : '/sys/bus/i2c/devices/3-0050/online' },
+    0xfd : { 'class' : 'OccStatusSensor',
+        'os_path' : '/sys/bus/i2c/devices/3-0051/online' },
+    0x02 : { 'class' : 'OperatingSystemStatusSensor' },
+    0x06 : { 'class' : 'PowerCap',
         'os_path' : '/sys/class/hwmon/hwmon3/user_powercap' },
+    # Garrison value is used, Not in P9 XML yet.
+    0xD8 : { 'class' : 'PowerSupplyRedundancySensor'},
+    0xda : { 'class' : 'TurboAllowedSensor' },
+    0xb4 : { 'class' : 'PowerSupplyDeratingSensor' },
 }
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4

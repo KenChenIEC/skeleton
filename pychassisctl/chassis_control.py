@@ -44,11 +44,6 @@ class ChassisControlObject(DbusProperties, DbusObjectManager):
                 'object_name': '/org/openbmc/control/power0',
                 'interface_name': 'org.openbmc.control.Power'
             },
-            'identify_led': {
-                'bus_name': 'org.openbmc.control.led',
-                'object_name': '/org/openbmc/control/led/identify',
-                'interface_name': 'org.openbmc.Led'
-            },
             'host_services': {
                 'bus_name': 'org.openbmc.HostServices',
                 'object_name': '/org/openbmc/HostServices',
@@ -101,28 +96,12 @@ class ChassisControlObject(DbusProperties, DbusObjectManager):
 
     @dbus.service.method(DBUS_NAME,
                          in_signature='', out_signature='')
-    def setIdentify(self):
-        print "Turn on identify"
-        intf = self.getInterface('identify_led')
-        intf.setOn()
-        return None
-
-    @dbus.service.method(DBUS_NAME,
-                         in_signature='', out_signature='')
-    def clearIdentify(self):
-        print "Turn on identify"
-        intf = self.getInterface('identify_led')
-        intf.setOff()
-        return None
-
-    @dbus.service.method(DBUS_NAME,
-                         in_signature='', out_signature='')
     def powerOn(self):
         print "Turn on power and boot"
         self.Set(DBUS_NAME, "reboot", 0)
         intf = self.getInterface('systemd')
         f = getattr(intf, 'StartUnit')
-        f.call_async('obmc-chassis-start@0.target', 'replace')
+        f.call_async('obmc-host-start@0.target', 'replace')
         return None
 
     @dbus.service.method(DBUS_NAME,
@@ -132,7 +111,7 @@ class ChassisControlObject(DbusProperties, DbusObjectManager):
 
         intf = self.getInterface('systemd')
         f = getattr(intf, 'StartUnit')
-        f.call_async('obmc-chassis-stop@0.target', 'replace')
+        f.call_async('obmc-host-stop@0.target', 'replace')
         return None
 
     @dbus.service.method(DBUS_NAME,
@@ -164,6 +143,14 @@ class ChassisControlObject(DbusProperties, DbusObjectManager):
         else:
             self.Set(DBUS_NAME, "reboot", 1)
             self.softPowerOff()
+        return None
+
+    @dbus.service.method(DBUS_NAME,
+                         in_signature='', out_signature='')
+    def quiesce(self):
+        intf = self.getInterface('systemd')
+        f = getattr(intf, 'StartUnit')
+        f.call_async('obmc-host-quiesce@0.target', 'replace')
         return None
 
     @dbus.service.method(DBUS_NAME,
@@ -199,9 +186,8 @@ class ChassisControlObject(DbusProperties, DbusObjectManager):
         self.softReboot()
 
     def host_watchdog_signal_handler(self):
-        print "Watchdog Error, Hard Rebooting"
-        self.Set(DBUS_NAME, "reboot", 1)
-        self.powerOff()
+        print "Watchdog Error, Going to quiesce"
+        self.quiesce()
 
     def emergency_shutdown_signal_handler(self, message):
         print "Emergency Shutdown!"

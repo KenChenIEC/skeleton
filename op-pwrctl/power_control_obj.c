@@ -10,14 +10,16 @@
 #include <openbmc_intf.h>
 #include <openbmc.h>
 #include <gpio.h>
-#include <power_gpio.h>
+#include <gpio_configs.h>
 
 /* ------------------------------------------------------------------------- */
 static const gchar* dbus_object_path = "/org/openbmc/control";
 static const gchar* instance_name = "power0";
 static const gchar* dbus_name = "org.openbmc.control.Power";
 
-static PowerGpio g_power_gpio;
+static int g_pci_reset_held = 1;
+
+static GpioConfigs g_gpio_configs;
 
 static GDBusObjectManagerServer *manager = NULL;
 
@@ -50,14 +52,14 @@ poll_pgood(gpointer user_data)
 	}
 	uint8_t pgood_state;
 
-	int rc = gpio_open(&g_power_gpio.power_good_in);
+	int rc = gpio_open(&g_gpio_configs.power_gpio.power_good_in);
 	if(rc != GPIO_OK) {
 		g_print("ERROR PowerControl: GPIO open error (gpio=%s,rc=%d)\n",
-				g_power_gpio.power_good_in.name, rc);
+				g_gpio_configs.power_gpio.power_good_in.name, rc);
 		return FALSE;
 	}
-	rc = gpio_read(&g_power_gpio.power_good_in, &pgood_state);
-	gpio_close(&g_power_gpio.power_good_in);
+	rc = gpio_read(&g_gpio_configs.power_gpio.power_good_in, &pgood_state);
+	gpio_close(&g_gpio_configs.power_gpio.power_good_in);
 	if(rc == GPIO_OK)
 	{
 		//if changed, set property and emit signal
@@ -70,6 +72,7 @@ poll_pgood(gpointer user_data)
 			{
 				control_power_emit_power_lost(control_power);
 				control_emit_goto_system_state(control,"HOST_POWERED_OFF");
+				g_pci_reset_held = 1;
 			}
 			else
 			{
@@ -77,9 +80,9 @@ poll_pgood(gpointer user_data)
 				control_emit_goto_system_state(control,"HOST_POWERED_ON");
 			}
 
-			for(i = 0; i < g_power_gpio.num_reset_outs; i++)
+			for(i = 0; i < g_gpio_configs.power_gpio.num_reset_outs; i++)
 			{
-				GPIO *reset_out = &g_power_gpio.reset_outs[i];
+				GPIO *reset_out = &g_gpio_configs.power_gpio.reset_outs[i];
 				rc = gpio_open(reset_out);
 				if(rc != GPIO_OK)
 				{
@@ -88,16 +91,46 @@ poll_pgood(gpointer user_data)
 					continue;
 				}
 
-				reset_state = pgood_state ^ !g_power_gpio.reset_pols[i];
-				g_print("PowerControl: setting reset %s to %d\n", reset_out->name,
-						(int)reset_state);
+				reset_state = pgood_state ^ g_gpio_configs.power_gpio.reset_pols[i];
+				g_print("PowerControl: pgood: %d, setting reset %s to %d\n",
+						(int)pgood_state, reset_out->name, (int)reset_state);
 				gpio_write(reset_out, reset_state);
 				gpio_close(reset_out);
+			}
+
+			for(i = 0; i < g_gpio_configs.power_gpio.num_pci_reset_outs; i++)
+			{
+				GPIO *pci_reset_out = &g_gpio_configs.power_gpio.pci_reset_outs[i];
+				if(pgood_state == 1)
+				{
+					/*
+					 * When powering on, hold PCI reset until
+					 * the processor can forward clocks and control reset.
+					 */
+					if(g_gpio_configs.power_gpio.pci_reset_holds[i])
+					{
+						g_print("Holding pci reset: %s\n", pci_reset_out->name);
+						continue;
+					}
+				}
+				rc = gpio_open(pci_reset_out);
+				if(rc != GPIO_OK)
+				{
+					g_print("ERROR PowerControl: GPIO open error (gpio=%s,rc=%d)\n",
+							pci_reset_out->name, rc);
+					continue;
+				}
+
+				reset_state = pgood_state ^ g_gpio_configs.power_gpio.pci_reset_pols[i];
+				g_print("PowerControl: pgood: %d, setting pci reset %s to %d\n",
+						(int)pgood_state, pci_reset_out->name, (int)reset_state);
+				gpio_write(pci_reset_out, reset_state);
+				gpio_close(pci_reset_out);
 			}
 		}
 	} else {
 		g_print("ERROR PowerControl: GPIO read error (gpio=%s,rc=%d)\n",
-				g_power_gpio.power_good_in.name, rc);
+				g_gpio_configs.power_gpio.power_good_in.name, rc);
 		//return false so poll won't get called anymore
 		return FALSE;
 	}
@@ -116,6 +149,70 @@ poll_pgood(gpointer user_data)
 	return TRUE;
 }
 
+/* Handler for BootProgress signal from BootProgress sensor */
+static void
+on_boot_progress(GDBusConnection *connection,
+		const gchar *sender_name,
+		const gchar *object_path,
+		const gchar *interface_name,
+		const gchar *signal_name,
+		GVariant *parameters,
+		gpointer user_data)
+{
+	gchar *boot_progress;
+	uint8_t pgood_state;
+	uint8_t reset_state;
+	int rc;
+	int i;
+
+	if(!parameters)
+		return;
+
+	/* prevent release again */
+	if(!g_pci_reset_held)
+		return;
+
+	g_variant_get(parameters, "(s)", &boot_progress);
+	/* Release PCI reset when FW boot progress goes beyond 'Baseboard Init' */
+	if(strcmp(boot_progress, "FW Progress, Baseboard Init") == 0)
+		return;
+
+	rc = gpio_open(&g_gpio_configs.power_gpio.power_good_in);
+	if(rc != GPIO_OK)
+	{
+		g_print("ERROR PowerControl: on_boot_progress(): GPIO open error (gpio=%s,rc=%d)\n",
+			g_gpio_configs.power_gpio.power_good_in.name, rc);
+		return;
+	}
+	rc = gpio_read(&g_gpio_configs.power_gpio.power_good_in, &pgood_state);
+	gpio_close(&g_gpio_configs.power_gpio.power_good_in);
+	if(rc != GPIO_OK || pgood_state != 1)
+		return;
+
+	for(i = 0; i < g_gpio_configs.power_gpio.num_pci_reset_outs; i++)
+	{
+		GPIO *pci_reset_out = &g_gpio_configs.power_gpio.pci_reset_outs[i];
+
+		if(!g_gpio_configs.power_gpio.pci_reset_holds[i])
+			continue;
+		rc = gpio_open(pci_reset_out);
+		if(rc != GPIO_OK)
+		{
+			g_print("ERROR PowerControl: GPIO open error (gpio=%s,rc=%d)\n",
+					pci_reset_out->name, rc);
+			continue;
+		}
+
+		reset_state = pgood_state ^ g_gpio_configs.power_gpio.pci_reset_pols[i];
+		g_print("PowerControl: pgood: %d, setting pci reset %s to %d\n",
+				(int)pgood_state, pci_reset_out->name, (int)reset_state);
+		gpio_write(pci_reset_out, reset_state);
+		gpio_close(pci_reset_out);
+		g_print("Released pci reset: %s - %s\n", pci_reset_out->name, boot_progress);
+	}
+	g_pci_reset_held = 0;
+}
+
 static gboolean
 on_set_power_state(ControlPower *pwr,
 		GDBusMethodInvocation *invocation,
@@ -123,6 +220,7 @@ on_set_power_state(ControlPower *pwr,
 		gpointer user_data)
 {
 	Control* control = object_get_control((Object*)user_data);
+	PowerGpio *power_gpio = &g_gpio_configs.power_gpio;
 	if(state > 1)
 	{
 		g_dbus_method_invocation_return_dbus_error(invocation,
@@ -147,17 +245,17 @@ on_set_power_state(ControlPower *pwr,
 			} else {
 				control_emit_goto_system_state(control,"HOST_POWERING_OFF");
 			}
-			for (i = 0; i < g_power_gpio.num_power_up_outs; i++) {
-				GPIO *power_pin = &g_power_gpio.power_up_outs[i];
+			for (i = 0; i < power_gpio->num_power_up_outs; i++) {
+				GPIO *power_pin = &power_gpio->power_up_outs[i];
 				error = gpio_open(power_pin);
 				if(error != GPIO_OK) {
 					g_print("ERROR PowerControl: GPIO open error (gpio=%s,rc=%d)\n",
-							g_power_gpio.power_up_outs[i].name, error);
+							power_gpio->power_up_outs[i].name, error);
 					continue;
 				}
-				power_up_out = state ^ !g_power_gpio.power_up_pols[i];
+				power_up_out = state ^ !power_gpio->power_up_pols[i];
 				g_print("PowerControl: setting power up %s to %d\n",
-						g_power_gpio.power_up_outs[i].name, (int)power_up_out);
+						power_gpio->power_up_outs[i].name, (int)power_up_out);
 				error = gpio_write(power_pin, power_up_out);
 				if(error != GPIO_OK) {
 					continue;
@@ -171,7 +269,37 @@ on_set_power_state(ControlPower *pwr,
 		{
 			g_print("ERROR PowerControl: GPIO set power state (rc=%d)\n",error);
 		}
+
+		/* If there's a latch, it should be enabled following changes to the
+		 * power pins' states. This commits the changes to the latch states. */
+		if (power_gpio->latch_out.name != NULL) {
+			int rc;
+			uint8_t latch_value = 0;
+			rc = gpio_open(&power_gpio->latch_out);
+			if (rc != GPIO_OK) {
+				/* Failures are non-fatal. */
+				g_print("PowerControl ERROR failed to open latch %s rc=%d\n",
+						power_gpio->latch_out.name, rc);
+				return TRUE;
+			}
+			/* Make the latch transparent for as brief of a time as possible. */
+			rc = gpio_write(&power_gpio->latch_out, 1);
+			if (rc != GPIO_OK) {
+				g_print("PowerControl ERROR failed to assert latch %s rc=%d\n",
+						power_gpio->latch_out.name, rc);
+			} else {
+				g_print("PowerControl asserted latch %s\n",
+						power_gpio->latch_out.name);
+			}
+			rc = gpio_write(&power_gpio->latch_out, 0);
+			if (rc != GPIO_OK) {
+				g_print("PowerControl ERROR failed to clear latch %s rc=%d\n",
+						power_gpio->latch_out.name, rc);
+			}
+			gpio_close(&power_gpio->latch_out);
+		}
 	}
+
 	return TRUE;
 }
 
@@ -230,24 +358,10 @@ set_up_gpio(GDBusConnection *connection,
 			error = rc;
 		}
 	}
-
-	/* If there's a latch, it only needs to be set once. */
-	if(power_gpio->latch_out.name != NULL) {
-		do {
-			rc = gpio_open(&power_gpio->latch_out);
-			if(rc != GPIO_OK) {
-				/* Failures are non-fatal. */
-				break;
-			}
-			rc = gpio_write(&power_gpio->latch_out, 1);
-			gpio_close(&power_gpio->latch_out);
-		} while(0);
-		if (rc != GPIO_OK) {
+	for(int i = 0; i < power_gpio->num_pci_reset_outs; i++) {
+		rc = gpio_init(connection, &power_gpio->pci_reset_outs[i]);
+		if(rc != GPIO_OK) {
 			error = rc;
-			g_print("PowerControl ERROR failed to assert latch %s rc=%d\n",
-					power_gpio->latch_out.name, rc);
-		} else {
-			g_print("PowerControl asserted latch %s\n", power_gpio->latch_out.name);
 		}
 	}
 
@@ -309,17 +423,28 @@ on_bus_acquired(GDBusConnection *connection,
 			G_CALLBACK(on_init),
 			object); /* user_data */
 
+	/* Listen for BootProgress signal from BootProgress sensor */
+	g_dbus_connection_signal_subscribe(connection,
+			NULL, /* service */
+			NULL, /* interface_name */
+			"BootProgress", /* member: name of the signal */
+			"/org/openbmc/sensors/host/BootProgress", /* obj path */
+			NULL, /* arg0 */
+			G_DBUS_SIGNAL_FLAGS_NONE,
+			(GDBusSignalCallback) on_boot_progress,
+			object, /* user data */
+			NULL );
 
 	/* Export the object (@manager takes its own reference to @object) */
 	g_dbus_object_manager_server_set_connection(manager, connection);
 	g_dbus_object_manager_server_export(manager, G_DBUS_OBJECT_SKELETON(object));
 	g_object_unref(object);
 
-	if(read_power_gpio(connection, &g_power_gpio) != TRUE) {
+	if(read_gpios(connection, &g_gpio_configs) != TRUE) {
 		g_print("ERROR PowerControl: could not read power GPIO configuration\n");
 	}
 
-	int rc = set_up_gpio(connection, &g_power_gpio, control_power);
+	int rc = set_up_gpio(connection, &g_gpio_configs.power_gpio, control_power);
 	if(rc != GPIO_OK) {
 		g_print("ERROR PowerControl: GPIO setup (rc=%d)\n",rc);
 	}
@@ -348,7 +473,7 @@ on_name_lost(GDBusConnection *connection,
 		const gchar *name,
 		gpointer user_data)
 {
-	free_power_gpio(&g_power_gpio);
+	free_gpios(&g_gpio_configs);
 }
 
 /*----------------------------------------------------------------*/

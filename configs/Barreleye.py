@@ -557,15 +557,30 @@ HWMON_CONFIG = {
 	},
 }
 
-POWER_CONFIG = {
-    'power_good_in' : 'PGOOD',
-    'power_up_outs' : [
-        ('POWER_PIN', False),
-    ],
-    'reset_outs' : [
-        ('PCIE_RESET', False),
-        ('USB_RESET', False),
-    ],
+GPIO_CONFIGS = {
+    'power_config' : {
+        'power_good_in' : 'PGOOD',
+        'power_up_outs' : [
+            ('POWER_PIN', False),
+        ],
+        'reset_outs' : [
+            ('USB_RESET', False),
+        ],
+        'pci_reset_outs': [
+            # net name, polarity, reset hold
+            ('PCIE_RESET', False, False),
+        ],
+    },
+    'hostctl_config' : {
+        'fsi_data' : 'FSI_DATA',
+        'fsi_clk' : 'FSI_CLK',
+        'fsi_enable' : 'FSI_ENABLE',
+        'cronus_sel' : 'CRONUS_SEL',
+        'optionals' : [
+            ('BMC_THROTTLE', True),
+            ('IDBTN', False),
+        ],
+    },
 }
 
 # Miscellaneous non-poll sensor with system specific properties.
@@ -574,9 +589,9 @@ MISC_SENSORS = {
 	0x09 : { 'class' : 'BootCountSensor' },
 	0x05 : { 'class' : 'BootProgressSensor' },
 	0x08 : { 'class' : 'OccStatusSensor',
-		'os_path' : '/sys/class/i2c-adapter/i2c-3/3-0050/online' },
+		'os_path' : '/sys/bus/i2c/devices/3-0050/online' },
 	0x0A : { 'class' : 'OccStatusSensor',
-		'os_path' : '/sys/class/i2c-adapter/i2c-3/3-0051/online' },
+		'os_path' : '/sys/bus/i2c/devices/3-0051/online' },
 	0x32 : { 'class' : 'OperatingSystemStatusSensor' },
 	0x33 : { 'class' : 'PowerCap',
 		'os_path' : '/sys/class/hwmon/hwmon3/user_powercap' },

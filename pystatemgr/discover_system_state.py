@@ -24,10 +24,10 @@ dbus_objects = {
         'object_name': '/org/openbmc/sensors/host/BootProgress',
         'interface_name': 'org.openbmc.SensorValue'
     },
-    'chassis': {
-        'bus_name': 'org.openbmc.control.Chassis',
-        'object_name': '/org/openbmc/control/chassis0',
-        'interface_name': 'org.openbmc.control.Chassis'
+    'host': {
+        'bus_name': 'xyz.openbmc_project.State.Host',
+        'object_name': '/xyz/openbmc_project/state/host0',
+        'interface_name': 'xyz.openbmc_project.State.Host'
     },
     'settings': {
         'bus_name': 'org.openbmc.settings.Host',
@@ -38,6 +38,21 @@ dbus_objects = {
         'bus_name': 'org.openbmc.managers.System',
         'object_name': '/org/openbmc/managers/System',
         'interface_name': 'org.freedesktop.DBus.Properties'
+    },
+    'powersupplyredundancy': {
+        'bus_name': 'org.openbmc.Sensors',
+        'object_name': '/org/openbmc/sensors/host/PowerSupplyRedundancy',
+        'interface_name': 'org.openbmc.SensorValue'
+    },
+    'turboallowed': {
+        'bus_name': 'org.openbmc.Sensors',
+        'object_name': '/org/openbmc/sensors/host/TurboAllowed',
+        'interface_name': 'org.openbmc.SensorValue'
+    },
+    'powersupplyderating': {
+        'bus_name': 'org.openbmc.Sensors',
+        'object_name': '/org/openbmc/sensors/host/PowerSupplyDerating',
+        'interface_name': 'org.openbmc.SensorValue'
     },
 }
 
@@ -54,6 +69,11 @@ def getProperty(bus, objs, key, prop):
     intf = dbus.Interface(obj, dbus.PROPERTIES_IFACE)
     return intf.Get(objs[key]['interface_name'], prop)
 
+def setProperty(bus, objs, key, prop, prop_value):
+    obj = bus.get_object(
+        objs[key]['bus_name'], objs[key]['object_name'])
+    intf = dbus.Interface(obj, dbus.PROPERTIES_IFACE)
+    return intf.Set(objs[key]['interface_name'], prop, prop_value)
 
 bus = dbus.SystemBus()
 pgood = getProperty(bus, dbus_objects, 'power', 'pgood')
@@ -74,11 +94,11 @@ else:
     power_policy = settings_intf.Get("org.openbmc.settings.Host",
                                      "power_policy")
     print "Last System State:"+system_last_state+"Power Policy:"+power_policy
-    chassis_intf = getInterface(bus, dbus_objects, 'chassis')
 
     if (power_policy == "ALWAYS_POWER_ON" or
        (power_policy == "RESTORE_LAST_STATE" and
             system_last_state == "HOST_POWERED_ON")):
-        chassis_intf.powerOn()
+        setProperty(bus, dbus_objects, 'host', 'RequestedHostTransition',
+                    'xyz.openbmc_project.State.Host.Transition.On')
 
 # vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4
