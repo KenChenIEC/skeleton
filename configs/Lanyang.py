@@ -373,7 +373,7 @@ GPIO_CONFIGS = {
         'latch_out': 'BMC_UCD_LATCH_LE',
         'power_good_in' : 'SYS_PWROK_BUFF',
         'power_up_outs' : [
-            ('SOFTWARE_PGOOD', True),
+            ('SOFTWARE_PGOOD', False),
             ('BMC_POWER_UP', False),
         ],
         'reset_outs' : [
