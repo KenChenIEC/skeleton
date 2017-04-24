@@ -318,8 +318,7 @@ GPIO_CONFIG['SOFTWARE_PGOOD'] = \
 GPIO_CONFIG['BMC_POWER_UP'] = \
         {'gpio_pin': 'E2', 'direction': 'out'} # BMC_PWR_BTN_OUT_N
 GPIO_CONFIG['SYS_PWROK_BUFF'] = \
-        {'gpio_pin': 'F6', 'direction': 'in'} # BMC_UCD_PGOOD:wq
-
+        {'gpio_pin': 'F6', 'direction': 'in'} # BMC_UCD_PGOOD
 GPIO_CONFIG['PHY_RST_N'] = \
         {'gpio_pin': 'D6', 'direction': 'out'}# Change to Disconnect pin
 GPIO_CONFIG['HDD_PWR_EN'] = \
@@ -334,10 +333,8 @@ GPIO_CONFIG['FSI_ENABLE'] = \
         {'gpio_pin': 'D0', 'direction': 'out'}# BMC_FSI_IN_ENA
 GPIO_CONFIG['CRONUS_SEL'] = \
         {'gpio_pin': 'H2', 'direction': 'out'}# BMC_FSI_DBG_PRSNT_N
-# FIXME: net name is FP_PWR_BTN_N in schematic
 GPIO_CONFIG['POWER_BUTTON'] = \
         {'gpio_pin': 'E4', 'direction': 'both'}# PWR_BTN_D_N
-# FIXME: net name is FP_RST_BTN_N in schematic
 GPIO_CONFIG['RESET_BUTTON'] = \
         {'gpio_pin': 'E3', 'direction': 'both'}# RST_BTN_D_N 
 GPIO_CONFIG['PE_MEZZB_PRSNT_N'] = \
